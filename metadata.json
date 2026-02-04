@@ -1,5 +1,6 @@
+
 {
-  "name": "Rakuten Trend Explorer",
+  "name": "Rakuten Ranking Copier",
   "description": "A high-performance real-time ranking viewer for Rakuten Ichiba, optimized for mobile browsing and affiliate link sharing.",
   "requestFramePermissions": []
 }
