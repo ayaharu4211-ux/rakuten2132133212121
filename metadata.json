@@ -1,6 +1,6 @@
 
 {
-  "name": "Rakuten Ranking Copier",
-  "description": "A high-performance real-time ranking viewer for Rakuten Ichiba, optimized for mobile browsing and affiliate link sharing.",
+  "name": "Rakuten Ranking",
+  "description": "楽天APIからリアルタイムランキングを取得して表示する軽量なWebアプリ",
   "requestFramePermissions": []
 }
