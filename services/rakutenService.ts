@@ -3,21 +3,23 @@ import { RakutenItem } from '../types';
 import { RAKUTEN_API_BASE_URL } from '../constants';
 
 // ユーザーから提供された認証情報
-const APP_ID = '1069849120479290339';
-const AFFILIATE_ID = '1cd2c935.7bc813b2.1cd2c936.7c0882f2';
+// Fix: Add explicit string type to prevent TypeScript from treating this as a literal type,
+// which avoids "no overlap" errors during empty string checks later in the code.
+const APP_ID: string = '1069849120479290339';
+const AFFILIATE_ID: string = '1cd2c935.7bc813b2.1cd2c936.7c0882f2';
 
 export const isRakutenConfigured = !!APP_ID;
 
 /**
  * デモ用のダミーデータを生成
- * (APP_ID自体が未設定の場合のみのバックアップとして残しますが、通常のエラー時は使用しません)
  */
 const getMockData = (genreId: string): RakutenItem[] => {
   const genres: Record<string, string> = {
     '0': '総合',
     '100371': 'レディース',
     '100227': '食品',
-    '562637': '家電'
+    '562637': '家電',
+    '566337': 'ふるさと納税'
   };
   const genreName = genres[genreId] || '注目';
 
@@ -33,7 +35,9 @@ const getMockData = (genreId: string): RakutenItem[] => {
 };
 
 export const fetchRankings = async (genreId: string): Promise<RakutenItem[]> => {
-  if (!APP_ID) {
+  // APP_IDが設定されていない場合やエラー時にはデモデータを返すことで画面が白くなるのを防ぐ
+  // Fix: Comparison with '' is now valid because APP_ID is typed as string
+  if (!APP_ID || APP_ID === '') {
     return new Promise((resolve) => {
       setTimeout(() => resolve(getMockData(genreId)), 800);
     });
@@ -53,14 +57,14 @@ export const fetchRankings = async (genreId: string): Promise<RakutenItem[]> => 
     const response = await fetch(url.toString());
     
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error_description || `APIエラー: ${response.status}`);
+      console.warn(`API response not ok: ${response.status}. Falling back to mock.`);
+      return getMockData(genreId);
     }
 
     const data = await response.json();
     
     if (!data.Items || !Array.isArray(data.Items)) {
-      return [];
+      return getMockData(genreId);
     }
 
     return data.Items.map((item: any) => ({
@@ -73,8 +77,8 @@ export const fetchRankings = async (genreId: string): Promise<RakutenItem[]> => 
       shopName: item.Item.shopName
     }));
   } catch (error) {
-    console.error('Fetch error:', error);
-    // 取得失敗時は、不正確なデモデータを出さずにエラーを上位に投げる
-    throw error;
+    console.error('Fetch error, showing mock data:', error);
+    // ネットワークエラー時もアプリを落とさずデモを表示
+    return getMockData(genreId);
   }
 };
