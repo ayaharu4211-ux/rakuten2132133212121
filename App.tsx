@@ -51,7 +51,7 @@ const App: React.FC = () => {
             </div>
             <div>
               <h1 className="text-lg font-black text-gray-900 leading-none">
-                Rakuten Ranking
+                Rakuten Ranking Copier
               </h1>
               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1">
                 Real-time Insights
