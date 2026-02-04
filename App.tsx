@@ -12,7 +12,6 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<AppStatus>(AppStatus.IDLE);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
-  // APIキーが設定されている場合はデモモード表示をオフにする
   const isDemoMode = !isRakutenConfigured;
 
   const loadData = useCallback(async (genreId: string) => {
@@ -35,13 +34,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-10 flex flex-col max-w-2xl mx-auto bg-gray-50 shadow-xl">
-      {/* Demo Mode Notice - Only shown if keys are truly missing */}
-      {isDemoMode && (
-        <div className="bg-amber-500 text-white text-[10px] py-1 px-4 text-center font-bold tracking-wider uppercase">
-          Demo Mode: RAKUTEN_APP_ID is missing
-        </div>
-      )}
-
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
@@ -51,7 +43,7 @@ const App: React.FC = () => {
             </div>
             <div>
               <h1 className="text-lg font-black text-gray-900 leading-none">
-                Rakuten Ranking Copier
+                Rakuten Ranking
               </h1>
               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1">
                 Real-time Insights
@@ -88,22 +80,6 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="px-3 pt-4 flex-1">
-        {status === AppStatus.ERROR && (
-          <div className="bg-white border border-red-100 rounded-3xl p-10 text-center shadow-sm mx-2">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-              <i className="fas fa-triangle-exclamation text-2xl"></i>
-            </div>
-            <h2 className="text-gray-900 font-black text-lg mb-2">通信エラーが発生しました</h2>
-            <p className="text-gray-500 text-sm mb-6 leading-relaxed">{errorMsg}</p>
-            <button 
-              onClick={() => loadData(activeGenreId)}
-              className="bg-red-600 text-white px-8 py-3 rounded-2xl text-sm font-black hover:bg-red-700 shadow-xl shadow-red-200 transition-all active:scale-95"
-            >
-              再読み込み
-            </button>
-          </div>
-        )}
-
         <div className="space-y-3">
           {status === AppStatus.LOADING ? (
             Array.from({ length: 8 }).map((_, idx) => (
