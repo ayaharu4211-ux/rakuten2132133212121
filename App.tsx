@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchRankings } from './services/rakutenService';
-import { RakutenItem, AppStatus, Genre } from './types';
+import { fetchRankings, isRakutenConfigured } from './services/rakutenService';
+import { RakutenItem, AppStatus } from './types';
 import { RAKUTEN_GENRES } from './constants';
 import ItemCard from './components/ItemCard';
 import SkeletonCard from './components/SkeletonCard';
@@ -11,6 +11,9 @@ const App: React.FC = () => {
   const [activeGenreId, setActiveGenreId] = useState<string>(RAKUTEN_GENRES[0].id);
   const [status, setStatus] = useState<AppStatus>(AppStatus.IDLE);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  // APIキーが設定されている場合はデモモード表示をオフにする
+  const isDemoMode = !isRakutenConfigured;
 
   const loadData = useCallback(async (genreId: string) => {
     setStatus(AppStatus.LOADING);
@@ -28,28 +31,39 @@ const App: React.FC = () => {
 
   useEffect(() => {
     loadData(activeGenreId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeGenreId]);
+  }, [activeGenreId, loadData]);
 
   return (
-    <div className="min-h-screen pb-10 flex flex-col max-w-2xl mx-auto bg-gray-50">
+    <div className="min-h-screen pb-10 flex flex-col max-w-2xl mx-auto bg-gray-50 shadow-xl">
+      {/* Demo Mode Notice - Only shown if keys are truly missing */}
+      {isDemoMode && (
+        <div className="bg-amber-500 text-white text-[10px] py-1 px-4 text-center font-bold tracking-wider uppercase">
+          Demo Mode: RAKUTEN_APP_ID is missing
+        </div>
+      )}
+
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-4 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center text-white">
-              <i className="fas fa-chart-line"></i>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-gradient-to-br from-red-500 to-red-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-red-200">
+              <i className="fas fa-bolt-lightning text-sm"></i>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-              Rakuten Ranking
-            </h1>
+            <div>
+              <h1 className="text-lg font-black text-gray-900 leading-none">
+                Rakuten Ranking
+              </h1>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1">
+                Real-time Insights
+              </p>
+            </div>
           </div>
           <button 
             onClick={() => loadData(activeGenreId)}
-            className="p-2 text-gray-500 hover:text-red-600 transition-colors"
-            title="更新"
+            className="w-10 h-10 flex items-center justify-center rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all active:scale-95"
+            aria-label="リロード"
           >
-            <i className={`fas fa-rotate ${status === AppStatus.LOADING ? 'animate-spin' : ''}`}></i>
+            <i className={`fas fa-arrows-rotate ${status === AppStatus.LOADING ? 'animate-spin text-red-600' : ''}`}></i>
           </button>
         </div>
 
@@ -59,13 +73,13 @@ const App: React.FC = () => {
             <button
               key={genre.id}
               onClick={() => setActiveGenreId(genre.id)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+              className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 whitespace-nowrap ${
                 activeGenreId === genre.id
-                ? 'bg-red-600 text-white shadow-md'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-red-300'
+                ? 'bg-gray-900 text-white shadow-lg shadow-gray-200 scale-105'
+                : 'bg-white text-gray-500 border border-gray-100 hover:border-gray-300'
               }`}
             >
-              <i className={`fas ${genre.icon} text-xs ${activeGenreId === genre.id ? 'text-white' : 'text-gray-400'}`}></i>
+              <i className={`fas ${genre.icon} ${activeGenreId === genre.id ? 'text-red-400' : 'text-gray-300'}`}></i>
               {genre.name}
             </button>
           ))}
@@ -73,59 +87,55 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="px-4 pt-4 flex-1">
+      <main className="px-3 pt-4 flex-1">
         {status === AppStatus.ERROR && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <i className="fas fa-circle-exclamation text-red-400 text-3xl mb-3"></i>
-            <h2 className="text-red-800 font-bold mb-1">エラーが発生しました</h2>
-            <p className="text-red-600 text-sm mb-4">{errorMsg}</p>
+          <div className="bg-white border border-red-100 rounded-3xl p-10 text-center shadow-sm mx-2">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+              <i className="fas fa-triangle-exclamation text-2xl"></i>
+            </div>
+            <h2 className="text-gray-900 font-black text-lg mb-2">通信エラーが発生しました</h2>
+            <p className="text-gray-500 text-sm mb-6 leading-relaxed">{errorMsg}</p>
             <button 
               onClick={() => loadData(activeGenreId)}
-              className="bg-red-600 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-red-700 shadow-sm"
+              className="bg-red-600 text-white px-8 py-3 rounded-2xl text-sm font-black hover:bg-red-700 shadow-xl shadow-red-200 transition-all active:scale-95"
             >
               再読み込み
             </button>
-            <p className="mt-4 text-xs text-gray-500">
-              ※APIキーが正しく設定されていない可能性があります。
-            </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-1">
+        <div className="space-y-3">
           {status === AppStatus.LOADING ? (
-            Array.from({ length: 10 }).map((_, idx) => (
+            Array.from({ length: 8 }).map((_, idx) => (
               <SkeletonCard key={idx} />
             ))
           ) : (
-            items.map((item) => (
-              <ItemCard key={`${item.rank}-${item.itemUrl}`} item={item} />
+            items.map((item, idx) => (
+              <ItemCard key={`${item.rank}-${idx}`} item={item} />
             ))
           )}
         </div>
 
         {status === AppStatus.SUCCESS && items.length === 0 && (
-          <div className="py-20 text-center text-gray-400">
-            <i className="fas fa-box-open text-4xl mb-4"></i>
-            <p>商品が見つかりませんでした。</p>
+          <div className="py-24 text-center">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
+              <i className="fas fa-magnifying-glass text-3xl"></i>
+            </div>
+            <p className="text-gray-400 font-bold">このジャンルの商品は見つかりませんでした。</p>
           </div>
         )}
       </main>
 
-      {/* Footer / Branding */}
-      <footer className="mt-8 text-center px-4">
-        <p className="text-[10px] text-gray-400 leading-relaxed uppercase tracking-widest">
-          Powered by Rakuten Web Service
+      {/* Footer */}
+      <footer className="mt-12 mb-6 text-center px-4">
+        <p className="text-[9px] text-gray-300 font-black uppercase tracking-[0.2em]">
+          Data provided by Rakuten Web Service
         </p>
       </footer>
 
       <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
