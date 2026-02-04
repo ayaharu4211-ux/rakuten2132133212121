@@ -6,19 +6,18 @@ import { RAKUTEN_API_BASE_URL } from '../constants';
 const APP_ID = '1069849120479290339';
 const AFFILIATE_ID = '1cd2c935.7bc813b2.1cd2c936.7c0882f2';
 
-// 外部から設定状況を確認できるようにエクスポート
 export const isRakutenConfigured = !!APP_ID;
 
 /**
- * デモ用のダミーデータを生成（APIエラー時やバックアップ用）
+ * デモ用のダミーデータを生成
+ * (APP_ID自体が未設定の場合のみのバックアップとして残しますが、通常のエラー時は使用しません)
  */
 const getMockData = (genreId: string): RakutenItem[] => {
   const genres: Record<string, string> = {
     '0': '総合',
     '100371': 'レディース',
     '100227': '食品',
-    '562637': '家電',
-    '566337': 'ふるさと納税'
+    '562637': '家電'
   };
   const genreName = genres[genreId] || '注目';
 
@@ -35,7 +34,6 @@ const getMockData = (genreId: string): RakutenItem[] => {
 
 export const fetchRankings = async (genreId: string): Promise<RakutenItem[]> => {
   if (!APP_ID) {
-    console.warn('Rakuten Application ID is missing. Using mock data.');
     return new Promise((resolve) => {
       setTimeout(() => resolve(getMockData(genreId)), 800);
     });
@@ -56,12 +54,7 @@ export const fetchRankings = async (genreId: string): Promise<RakutenItem[]> => 
     
     if (!response.ok) {
       const errorData = await response.json();
-      // もしAPIキーが無効などのエラーが出た場合は、開発体験のためにデモデータを返す
-      if (response.status === 401 || response.status === 400) {
-        console.error('API Key error, falling back to mock:', errorData);
-        return getMockData(genreId);
-      }
-      throw new Error(errorData.error_description || `API Error: ${response.status}`);
+      throw new Error(errorData.error_description || `APIエラー: ${response.status}`);
     }
 
     const data = await response.json();
@@ -81,7 +74,7 @@ export const fetchRankings = async (genreId: string): Promise<RakutenItem[]> => 
     }));
   } catch (error) {
     console.error('Fetch error:', error);
-    // ネットワークエラー時などはデモデータを返してUIが壊れないようにする
-    return getMockData(genreId);
+    // 取得失敗時は、不正確なデモデータを出さずにエラーを上位に投げる
+    throw error;
   }
 };
